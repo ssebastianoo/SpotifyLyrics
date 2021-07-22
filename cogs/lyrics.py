@@ -35,6 +35,11 @@ class Lyrics(commands.Cog):
         artists = activity.artist
         query = quote(title + " " + artists)
 
+        emb = discord.Embed(description="Searching lyrics...", colour=activity.colour)
+
+        try: msg = await ctx.reply(embed=emb, mention_author=False)
+        except: msg = await ctx.send(embed=emb)
+
         res = await self.bot.session.get(f"https://some-random-api.ml/lyrics?title={query}")
         data = await res.json()
 
@@ -48,8 +53,7 @@ class Lyrics(commands.Cog):
         emb.set_author(name=str(member), icon_url=str(member.avatar_url_as(static_format="png")))
         emb.set_thumbnail(url=activity.album_cover_url)
 
-        try: await ctx.reply(embed=emb, mention_author=False)
-        except: await ctx.send(embed=emb)
+        await msg.edit(embed=emb)
 
 def setup(bot):
     bot.add_cog(Lyrics(bot))
