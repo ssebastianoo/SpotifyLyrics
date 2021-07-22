@@ -45,15 +45,33 @@ class Lyrics(commands.Cog):
 
         if data.get("error"):
             emb = discord.Embed(description=data.get("error"), colour=discord.Colour.red())
-            try: await ctx.reply(embed=emb, mention_author=False)
-            except: await ctx.send(embed=emb)
-            return
+            return await msg.edit(embed=emb)
 
-        emb = discord.Embed(title=f"{data['author']} | {data['title']}", description=data["lyrics"], colour=activity.colour)
+        paginator = commands.Paginator(prefix=None, suffix=None, max_size=4096)
+
+        for line in data["lyrics"].splitlines():
+            paginator.add_line(line)
+
+        emb = discord.Embed(title=f"{data['author']} | {data['title']}", description=paginator.pages[0], colour=activity.colour)
         emb.set_author(name=str(member), icon_url=str(member.avatar_url_as(static_format="png")))
         emb.set_thumbnail(url=activity.album_cover_url)
 
+        if len(paginator.pages) > 1:
+            emb.set_footer(text=f"Pag. 1/{len(paginator.pages)}")
+
         await msg.edit(embed=emb)
+
+        emb = discord.Embed(colour=activity.colour)
+
+        count = 0
+        for pag in paginator.pages:
+            if count == 0:
+                pass
+            else:
+                emb.description = pag
+                emb.set_footer(text=f"Pag. {count + 1}/{len(paginator.pages)}")
+                msg = await msg.reply(embed=emb, mention_author=False)
+            count += 1
 
 def setup(bot):
     bot.add_cog(Lyrics(bot))
